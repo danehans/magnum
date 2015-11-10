@@ -2,15 +2,14 @@
 
 . /etc/sysconfig/heat-params
 
-if [ "$NETWORK_DRIVER" != "flannel" ]; then
-    exit 0
-fi
+if [ "$NETWORK_DRIVER" == "flannel" ]; then
 
-. /etc/sysconfig/flanneld
-
+FLANNEL_CONFIG=/etc/sysconfig/flanneld
 FLANNEL_CONFIG_BIN=/usr/local/bin/flannel-config
 FLANNEL_CONFIG_SERVICE=/etc/systemd/system/flannel-config.service
 FLANNEL_JSON=/etc/sysconfig/flannel-network.json
+
+. $FLANNEL_CONFIG
 
 echo "creating $FLANNEL_CONFIG_BIN"
 cat > $FLANNEL_CONFIG_BIN <<EOF
@@ -41,7 +40,7 @@ Requires=etcd.service
 
 [Service]
 Type=oneshot
-EnvironmentFile=/etc/sysconfig/flanneld
+EnvironmentFile=$FLANNEL_CONFIG
 ExecStart=$FLANNEL_CONFIG_BIN
 
 [Install]
@@ -56,3 +55,5 @@ chmod 0644 $FLANNEL_CONFIG_SERVICE
 
 systemctl enable flannel-config
 systemctl start --no-block flannel-config
+
+fi
